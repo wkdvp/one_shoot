@@ -7,16 +7,16 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
-UPLOAD_DIR = "uploads"
-EXTRACT_DIR = "extracted"
-OUTPUT_DIR = "output"
+UPLOAD_DIR = "/uploads"
+EXTRACT_DIR = "/extracted"
+OUTPUT_DIR = "/output"
 
 for d in [UPLOAD_DIR, EXTRACT_DIR, OUTPUT_DIR]:
     os.makedirs(d, exist_ok=True)
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", uploaded=False)
 
 @app.route("/upload", methods=["POST"])
 def upload_zip():
@@ -50,10 +50,14 @@ def upload_zip():
                 #print()
                 shutil.rmtree(f_path)
     if os.path.exists(output_pdf):
-        return send_file(output_pdf, as_attachment=True)
+        return render_template("index.html", uploaded=True)
     else:
         return "no return", 400
     
+@app.route("/download_pdf")
+def download_pdf():
+    output_pdf = os.path.join(OUTPUT_DIR, "result.pdf")
+    return send_file(output_pdf, as_attachment=True)
 
 def jpg_images_to_pdf(input_folder, output_pdf):
     image_files = [f for f in os.listdir(input_folder) if f.lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))]
